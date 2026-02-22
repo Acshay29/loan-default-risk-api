@@ -60,29 +60,27 @@ st.markdown("---")
 # PREDICT BUTTON
 # ----------------------------
 if st.button("🚀 Predict"):
-    payload = {
-        "features": features_input
-    }
-
     try:
         response = requests.post(API_URL, json=payload)
+        response.raise_for_status()
 
-        if response.status_code == 200:
-            result = response.json()
-            probability = result["probability"]
-            prediction = result["prediction"]
+        result = response.json()
+        prediction = result["prediction"]
+        probability = result["probability"]
 
-            if prediction == 1:
-                st.error("⚠ High Risk of Default")
-            else:
-                st.success("✅ Low Risk of Default")
-
-            st.progress(probability)
-            st.metric("Default Probability", f"{probability:.4f}")
-
+        if prediction == 1:
+            st.error("⚠ High Risk of Default")
         else:
-            st.error(f"Error: {response.text}")
+            st.success("✅ Low Risk of Default")
 
-    except Exception as e:
-        st.error(f"Connection error: {e}")
-        
+        st.progress(probability)
+        st.metric("Default Probability", f"{probability:.4f}")
+
+    except requests.exceptions.HTTPError:
+        st.error("❌ Invalid input. Please check your feature values.")
+
+    except requests.exceptions.ConnectionError:
+        st.error("🚫 Backend server is not reachable.")
+
+    except requests.exceptions.RequestException as e:
+        st.error(f"⚠ Unexpected error: {e}")
