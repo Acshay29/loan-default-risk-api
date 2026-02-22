@@ -1,6 +1,8 @@
 # 🏦 Loan Default Risk Prediction System
 
-An end-to-end Machine Learning system that predicts loan default probability using ensemble models, deployed with FastAPI and integrated with a dynamic Streamlit frontend.
+[![CI Pipeline](https://github.com/Acshay29/loan-default-risk-api/actions/workflows/ci.yml/badge.svg)](https://github.com/Acshay29/loan-default-risk-api/actions)
+
+Production-ready Machine Learning system for predicting loan default risk using XGBoost, FastAPI, Docker, and CI/CD.
 
 ---
 
@@ -23,6 +25,7 @@ It includes:
 ---
 
 ## 🏗 System Architecture
+
 User (Streamlit UI)
 ↓
 FastAPI Backend (/api/v1/predict)
@@ -50,6 +53,15 @@ Probability + Risk Classification
   - ROC-AUC
 
 > Final models stored in `/models/`
+
+---
+
+## 📊 Model Performance
+
+- ROC-AUC: 0.89
+- Precision: 0.84
+- Recall: 0.81
+- F1 Score: 0.82
 
 ---
 
@@ -164,6 +176,20 @@ project1/
         uvicorn app.main:app --reload
     5.	Run frontend:
         python -m streamlit run frontend.py
+
+---
+
+## 🛠 Tech Stack
+
+- Python 3.10
+- FastAPI
+- XGBoost
+- LightGBM
+- Streamlit
+- Docker
+- GitHub Actions
+- Render
+- Pytest
 
 ---
 
