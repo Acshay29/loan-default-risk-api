@@ -1,86 +1,57 @@
 import streamlit as st
 import requests
-import numpy as np
-import joblib
-import os
 
-# ----------------------------
-# CONFIG
-# ----------------------------
-API_URL = "http://127.0.0.1:8000/api/v1/predict"
+API_BASE = "http://127.0.0.1:8000/api/v1"
 
-st.set_page_config(page_title="Loan Default Predictor", layout="wide")
+st.set_page_config(page_title="Loan Default Risk Predictor")
 
-st.title("🏦 Loan Default Risk Prediction System")
-st.markdown("Predict loan default probability using trained ML model.")
+st.title("🏦 Loan Default Risk Predictor")
+st.write("Enter feature values and click Predict.")
 
-# ----------------------------
-# LOAD FEATURE NAMES
-# ----------------------------
-feature_names_path = os.path.join("models", "feature_names.pkl")
-feature_names = joblib.load(feature_names_path)
+# ===============================
+# Fetch Features Dynamically
+# ===============================
+try:
+    response = requests.get(f"{API_BASE}/features")
+    response.raise_for_status()
+    feature_names = response.json()["features"]
+except Exception as e:
+    st.error(f"Unable to fetch feature list: {e}")
+    st.stop()
 
-st.markdown("---")
-st.subheader("📊 Enter Feature Values")
+# ===============================
+# Generate Dynamic Inputs
+# ===============================
+inputs = []
 
-with st.expander("🔍 Click to Enter All 210 Features", expanded=False):
-    features_input = []
+for feature in feature_names:
+    value = st.number_input(feature, value=0.0, format="%.4f")
+    inputs.append(value)
 
-    cols = st.columns(3)
-
-    for i, feature in enumerate(feature_names):
-        col = cols[i % 3]
-        value = col.number_input(
-            label=feature,
-            value=0.0,
-            format="%.5f"
-        )
-        features_input.append(value)
-
-# ----------------------------
-# AUTO-GENERATED INPUTS
-# ----------------------------
-features_input = []
-
-cols = st.columns(3)
-
-for i, feature in enumerate(feature_names):
-    col = cols[i % 3]
-    value = col.number_input(
-    label=feature,
-    value=0.0,
-    format="%.5f",
-    key=f"input_{i}"
-)
-    features_input.append(value)
-
-st.markdown("---")
-
-# ----------------------------
-# PREDICT BUTTON
-# ----------------------------
+# ===============================
+# Prediction
+# ===============================
 if st.button("🚀 Predict"):
-    try:
-        response = requests.post(API_URL, json=payload)
-        response.raise_for_status()
+    payload = {"features": inputs}
 
+    try:
+        response = requests.post(f"{API_BASE}/predict", json=payload)
+        response.raise_for_status()
         result = response.json()
-        prediction = result["prediction"]
+
         probability = result["probability"]
+        prediction = result["prediction"]
+
+        st.subheader("Prediction Result")
 
         if prediction == 1:
             st.error("⚠ High Risk of Default")
         else:
             st.success("✅ Low Risk of Default")
 
-        st.progress(probability)
-        st.metric("Default Probability", f"{probability:.4f}")
-
-    except requests.exceptions.HTTPError:
-        st.error("❌ Invalid input. Please check your feature values.")
-
-    except requests.exceptions.ConnectionError:
-        st.error("🚫 Backend server is not reachable.")
+        st.metric("Default Probability", f"{probability:.2%}")
 
     except requests.exceptions.RequestException as e:
-        st.error(f"⚠ Unexpected error: {e}")
+        st.error(f"Backend error: {e}")
+    except Exception:
+        st.error("Invalid input. Please check feature values.")
